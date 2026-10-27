@@ -1,23 +1,46 @@
-function doGet() {
-  return HtmlService.createTemplateFromFile('Index')
-    .evaluate()
-    .setTitle('Car Care Pro - إدارة السيارات والورديات')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+function doGet(e) {
+  var action = e ? e.parameter.action : "";
+  var userId = e ? e.parameter.userId : "";
+  var carId = e ? e.parameter.carId : "";
+  
+  if (action === "getCars") return respondJSON(getUserCars(userId));
+  if (action === "getShifts") return respondJSON(getShiftsHistory(userId, carId));
+  if (action === "getRules") return respondJSON(getMaintenanceRules(carId));
+  
+  return respondJSON({ success: true, message: "Car Care API Active" });
 }
 
-// ==========================================
-// 🛠️ 1. المساعدات وتجهيز قواعد البيانات
-// ==========================================
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var action = data.action;
+    var res = { success: false, message: "إجراء غير صالح" };
 
+    if (action === "login") res = checkLogin(data.username, data.password);
+    else if (action === "register") res = registerUser(data.username, data.password);
+    else if (action === "addCar") res = addCar(data.userId, data.carName, data.odometer, data.installment, data.workDays);
+    else if (action === "updateKm") res = updateCarKm(data.userId, data.carId, data.newKm);
+    else if (action === "saveShift") res = saveShift(data.userId, data.carId, data.km, data.revenue, data.fuel, data.misc);
+    else if (action === "addRule") res = addMaintenanceRule(data.carId, data.name, data.intervalKm, data.estCost, data.currentKm);
+
+    return respondJSON(res);
+  } catch (err) {
+    return respondJSON({ success: false, message: err.message });
+  }
+}
+
+function respondJSON(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// باقي دوال قواعد البيانات والتشفير والعمليات المالية كما هي...
 function getOrCreateSheet(sheetName, headers) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
-    if (headers && headers.length > 0) {
-      sheet.appendRow(headers);
-    }
+    if (headers && headers.length > 0) sheet.appendRow(headers);
   }
   return sheet;
 }
@@ -43,21 +66,16 @@ function hashPassword(password) {
   return txtHash;
 }
 
-// ==========================================
-// 🔑 2. الحسابات والدخول
-// ==========================================
-
 function registerUser(username, password) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
     initDatabase();
-
     var cleanUser = String(username || '').trim();
     var cleanPass = String(password || '').trim();
 
-    if (cleanUser.length < 3) return { success: false, message: "اسم المستخدم يجب أن يكون 3 أحرف على الأقل." };
-    if (cleanPass.length < 6) return { success: false, message: "كلمة المرور يجب أن تكون 6 أحرف على الأقل." };
+    if (cleanUser.length < 3) return { success: false, message: "اسم المستخدم 3 أحرف على الأقل" };
+    if (cleanPass.length < 6) return { success: false, message: "كلمة المرور 6 أحرف على الأقل" };
 
     var sheet = getOrCreateSheet("Users");
     var data = sheet.getDataRange().getValues();
@@ -74,7 +92,7 @@ function registerUser(username, password) {
 
     return { success: true, message: "تم إنشاء الحساب بنجاح!", data: { userId: userId, username: cleanUser } };
   } catch (e) {
-    return { success: false, message: "حدث خطأ أثناء التسجيل: " + e.message };
+    return { success: false, message: e.message };
   } finally {
     lock.releaseLock();
   }
@@ -85,8 +103,6 @@ function checkLogin(username, password) {
     initDatabase();
     var cleanUser = String(username || '').trim().toLowerCase();
     var cleanPass = String(password || '').trim();
-
-    if (!cleanUser || !cleanPass) return { success: false, message: "يرجى إدخال اسم المستخدم وكلمة المرور." };
 
     var sheet = getOrCreateSheet("Users");
     var data = sheet.getDataRange().getValues();
@@ -99,19 +115,13 @@ function checkLogin(username, password) {
     }
     return { success: false, message: "اسم المستخدم أو كلمة المرور غير صحيحة." };
   } catch (e) {
-    return { success: false, message: "خطأ أثناء التحقق: " + e.message };
+    return { success: false, message: e.message };
   }
 }
-
-// ==========================================
-// 🚘 3. السيارات والعدادات
-// ==========================================
 
 function getUserCars(userId) {
   try {
     initDatabase();
-    if (!userId) return { success: false, message: "غير مصرح، يرجى الدخول أولاً", data: [] };
-
     var sheet = getOrCreateSheet("Cars");
     var data = sheet.getDataRange().getValues();
     var userCars = [];
@@ -128,9 +138,9 @@ function getUserCars(userId) {
         });
       }
     }
-    return { success: true, message: "تم جلب البيانات بنجاح", data: userCars };
+    return { success: true, data: userCars };
   } catch (e) {
-    return { success: false, message: "حدث خطأ أثناء جلب السيارات: " + e.message, data: [] };
+    return { success: false, message: e.message, data: [] };
   }
 }
 
@@ -139,22 +149,12 @@ function addCar(userId, carName, odometer, installment, workDays) {
   try {
     lock.waitLock(10000);
     initDatabase();
-
-    var name = String(carName || '').trim();
-    var km = Number(odometer);
-    var inst = Number(installment);
-    var days = Number(workDays);
-
-    if (!userId) return { success: false, message: "جلسة غير صالحة" };
-    if (!name) return { success: false, message: "يرجى كتابة اسم السيارة" };
-
     var sheet = getOrCreateSheet("Cars");
     var carId = "c_" + Utilities.getUuid().substring(0, 8);
-    sheet.appendRow([carId, userId, name, km, inst, days, new Date()]);
-
+    sheet.appendRow([carId, userId, carName, Number(odometer), Number(installment), Number(workDays), new Date()]);
     return { success: true, message: "تمت إضافة السيارة بنجاح" };
   } catch (e) {
-    return { success: false, message: "خطأ أثناء إضافة السيارة: " + e.message };
+    return { success: false, message: e.message };
   } finally {
     lock.releaseLock();
   }
@@ -165,10 +165,7 @@ function updateCarKm(userId, carId, newKm) {
   try {
     lock.waitLock(10000);
     initDatabase();
-
     var km = Number(newKm);
-    if (isNaN(km) || km < 0) return { success: false, message: "قيمة العداد غير صحيحة" };
-
     var sheet = getOrCreateSheet("Cars");
     var data = sheet.getDataRange().getValues();
 
@@ -180,21 +177,16 @@ function updateCarKm(userId, carId, newKm) {
 
         var logSheet = getOrCreateSheet("OdometerLogs");
         logSheet.appendRow(["log_" + Utilities.getUuid().substring(0, 8), carId, userId, new Date(), oldKm, km]);
-
         return { success: true, message: "تم تحديث العداد بنجاح" };
       }
     }
-    return { success: false, message: "لم يتم العثور على السيارة" };
+    return { success: false, message: "السيارة غير موجودة" };
   } catch (e) {
-    return { success: false, message: "خطأ أثناء تحديث العداد: " + e.message };
+    return { success: false, message: e.message };
   } finally {
     lock.releaseLock();
   }
 }
-
-// ==========================================
-// 🛠️ 4. قواعد الصيانة
-// ==========================================
 
 function getMaintenanceRules(carId) {
   try {
@@ -226,18 +218,9 @@ function addMaintenanceRule(carId, name, intervalKm, estCost, currentKm) {
   try {
     lock.waitLock(10000);
     initDatabase();
-
-    var ruleName = String(name || '').trim();
-    var interval = Number(intervalKm) || 0;
-    var cost = Number(estCost) || 0;
-    var lastKm = Number(currentKm) || 0;
-
-    if (!ruleName || interval <= 0) return { success: false, message: "يرجى إدخال اسم البند ومعدل التغيير" };
-
     var sheet = getOrCreateSheet("MaintenanceRules");
     var ruleId = "m_" + Utilities.getUuid().substring(0, 8);
-    sheet.appendRow([ruleId, carId, ruleName, interval, cost, lastKm]);
-
+    sheet.appendRow([ruleId, carId, name, Number(intervalKm), Number(estCost), Number(currentKm)]);
     return { success: true, message: "تم إضافة بند الصيانة بنجاح" };
   } catch (e) {
     return { success: false, message: e.message };
@@ -245,10 +228,6 @@ function addMaintenanceRule(carId, name, intervalKm, estCost, currentKm) {
     lock.releaseLock();
   }
 }
-
-// ==========================================
-// 📊 5. تسجيل وجلب الورديات
-// ==========================================
 
 function saveShift(userId, carId, km, revenue, fuel, misc) {
   var lock = LockService.getScriptLock();
@@ -281,7 +260,6 @@ function saveShift(userId, carId, km, revenue, fuel, misc) {
     if (!targetCar) return { success: false, message: "السيارة غير موجودة" };
 
     var dailyInstallment = targetCar.workDays > 0 ? (targetCar.installment / targetCar.workDays) : 0;
-    
     var maintSheet = getOrCreateSheet("MaintenanceRules");
     var maintData = maintSheet.getDataRange().getValues();
     var dailyMaintCost = 0;
@@ -298,9 +276,7 @@ function saveShift(userId, carId, km, revenue, fuel, misc) {
       }
     }
 
-    if (!hasRules && shiftKm > 0) {
-      dailyMaintCost = shiftKm * 0.35;
-    }
+    if (!hasRules && shiftKm > 0) dailyMaintCost = shiftKm * 0.35;
 
     var savingTarget = dailyInstallment + dailyMaintCost;
     var netProfit = shiftRev - (shiftFuel + shiftMisc + savingTarget);
@@ -308,8 +284,8 @@ function saveShift(userId, carId, km, revenue, fuel, misc) {
     var shiftSheet = getOrCreateSheet("Shifts");
     var shiftId = "s_" + Utilities.getUuid().substring(0, 8);
     var now = new Date();
-    
-    sheetAppendRow(shiftSheet, [
+
+    shiftSheet.appendRow([
       shiftId, userId, carId, now, shiftKm, shiftRev, shiftFuel, shiftMisc, 
       Math.round(savingTarget), Math.round(netProfit), Math.round(dailyInstallment), Math.round(dailyMaintCost)
     ]);
@@ -333,16 +309,11 @@ function saveShift(userId, carId, km, revenue, fuel, misc) {
         dailyMaintCost: Math.round(dailyMaintCost)
       }
     };
-
   } catch (e) {
-    return { success: false, message: "حدث خطأ أثناء حفظ الوردية: " + e.message };
+    return { success: false, message: e.message };
   } finally {
     lock.releaseLock();
   }
-}
-
-function sheetAppendRow(sheet, rowArray) {
-  sheet.appendRow(rowArray);
 }
 
 function getShiftsHistory(userId, carId) {
@@ -358,12 +329,11 @@ function getShiftsHistory(userId, carId) {
         var yyyy = rawDate.getFullYear();
         var mm = String(rawDate.getMonth() + 1).padStart(2, '0');
         var dd = String(rawDate.getDate()).padStart(2, '0');
-        var isoDate = yyyy + '-' + mm + '-' + dd;
 
         shifts.push({
           id: String(data[i][0]),
           date: rawDate.toLocaleDateString('ar-EG'),
-          isoDate: isoDate,
+          isoDate: yyyy + '-' + mm + '-' + dd,
           km: Number(data[i][4]) || 0,
           revenue: Number(data[i][5]) || 0,
           fuel: Number(data[i][6]) || 0,
