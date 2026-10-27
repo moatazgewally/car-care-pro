@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Car Care Pro - إدارة السيارات والورديات</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #f1f5f9; color: #0f172a; direction: rtl; text-align: right; }
+    .app-container { max-width: 460px; margin: 0 auto; min-height: 100vh; padding-bottom: 85px; position: relative; }
+    .card { background: #ffffff; border-radius: 18px; padding: 18px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
+    .btn { display: block; width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .btn:disabled { background: #94a3b8 !important; cursor: not-allowed; opacity: 0.7; }
+    .btn-green { background: #10b981; }
+    .btn-purple { background: #8b5cf6; }
+    .btn-red { background: #ef4444; }
+    .btn-subtle { background: #eff6ff; color: #2563eb; width: auto; padding: 6px 12px; font-size: 12px; }
+    .input-group { margin-bottom: 12px; }
+    .input-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #475569; }
+    .input-field { width: 100%; background: #f8fafc; border: 1px solid #cbd5e1; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: bold; outline: none; }
+    .input-field:focus { border-color: #2563eb; background: #ffffff; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .header { background: #ffffff; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 30; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .badge { background: #0f172a; color: #fff; font-size: 10px; padding: 3px 7px; border-radius: 6px; font-weight: bold; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 460px; margin: 0 auto; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-space-around; padding: 8px 4px; z-index: 40; }
+    .nav-item { flex: 1; border: none; background: transparent; padding: 8px 2px; font-size: 11px; font-weight: bold; color: #64748b; cursor: pointer; text-align: center; border-radius: 10px; }
+    .nav-item.active { background: #2563eb; color: #ffffff; }
+    .hidden { display: none !important; }
+    .stat-box { background: #fef3c7; border: 1px solid #fde68a; padding: 12px; border-radius: 14px; text-align: center; }
+    .stat-box-green { background: #d1fae5; border: 1px solid #a7f3d0; }
+    
+    /* Toast Egyptian Style */
+    #toastContainer { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 100; width: 92%; max-width: 420px; }
+    .toast { padding: 12px 16px; border-radius: 14px; background: #1e293b; color: #fff; font-size: 13px; margin-bottom: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); border-right: 5px solid #2563eb; }
+    .toast.success { border-right-color: #10b981; }
+    .toast.error { border-right-color: #ef4444; }
+    .toast.warning { border-right-color: #f59e0b; }
+    .toast-title { font-weight: 800; font-size: 13px; margin-bottom: 2px; display: block; }
+    .toast-quote { font-size: 12px; color: #cbd5e1; font-style: italic; font-weight: 600; }
+
+    /* Modal / Popup */
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(15,23,42,0.6); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-card { background: #fff; border-radius: 20px; width: 100%; max-width: 400px; padding: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+
+    /* Print Styles */
+    @media print {
+      body { background: #fff; color: #000; }
+      .nav-bar, .header, .btn, #toastContainer, .no-print { display: none !important; }
+      .app-container { max-width: 100%; padding: 0; }
+      .card { box-shadow: none; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="toastContainer"></div>
+
+<div class="app-container">
+
+  <!-- صفحة الدخول والتسجيل -->
+  <div id="authSection" style="padding: 24px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="width: 64px; height: 64px; background: #2563eb; color: #fff; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 32px; box-shadow: 0 8px 20px rgba(37,99,235,0.25);">🚗</div>
+      <h1 style="font-size: 24px; font-weight: 900; color: #0f172a;">Car Care Pro</h1>
+      <p style="font-size: 12px; color: #64748b; font-weight: bold;">لوحة تحليلات آمنة للنقل الذكي والصيانة</p>
+    </div>
+
+    <div id="loginCard" class="card">
+      <h2 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">تسجيل الدخول</h2>
+      <div class="input-group">
+        <label>اسم المستخدم</label>
+        <input type="text" id="loginUser" class="input-field" placeholder="ادخل اسم المستخدم">
+      </div>
+      <div class="input-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="loginPass" class="input-field" placeholder="••••••••">
+      </div>
+      <button type="button" class="btn" id="btnLogin" onclick="doLogin()">دخول التطبيق</button>
+      <div style="text-align: center; margin-top: 14px;">
+        <button type="button" style="background:none; border:none; color:#8b5cf6; font-size:12px; font-weight:bold; cursor:pointer;" onclick="toggleAuthView('register')">ليس لديك حساب؟ إنشاء حساب جديد</button>
+      </div>
+    </div>
+
+    <div id="registerCard" class="card hidden">
+      <h2 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">حساب جديد</h2>
+      <div class="input-group">
+        <label>اسم مستخدم جديد</label>
+        <input type="text" id="regUser" class="input-field" placeholder="اسم المستخدم (3 أحرف على الأقل)">
+      </div>
+      <div class="input-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="regPass" class="input-field" placeholder="كلمة المرور (6 أحرف على الأقل)">
+      </div>
+      <button type="button" class="btn btn-purple" id="btnRegister" onclick="doRegister()">إنشاء الحساب وتأمين البيانات</button>
+      <div style="text-align: center; margin-top: 14px;">
+        <button type="button" style="background:none; border:none; color:#2563eb; font-size:12px; font-weight:bold; cursor:pointer;" onclick="toggleAuthView('login')">لديك حساب بالفعل؟ تسجيل الدخول</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- التطبيق الرئيسي -->
+  <div id="appSection" class="hidden">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <span class="badge">DRIVER</span>
+          <span id="userLabel" style="font-size: 12px; font-weight: bold; margin-right: 6px;">-</span>
+        </div>
+        <div>
+          <button type="button" class="btn btn-green" style="display:inline-block; width:auto; padding:5px 12px; font-size:11px;" onclick="loadUserCars()">تحديث</button>
+          <button type="button" class="btn btn-red" style="display:inline-block; width:auto; padding:5px 12px; font-size:11px;" onclick="doLogout()">خروج</button>
+        </div>
+      </div>
+      <select id="carSelect" onchange="switchCar(this.value)" class="input-field" style="padding: 8px; font-size: 12px;"></select>
+    </div>
+
+    <div id="tabContent" style="padding: 16px;"></div>
+
+    <div class="nav-bar">
+      <button type="button" class="nav-item active" id="btn-home" onclick="navTo('home')">الرئيسية</button>
+      <button type="button" class="nav-item" id="btn-daily" onclick="navTo('daily')">الوردية</button>
+      <button type="button" class="nav-item" id="btn-routine" onclick="navTo('routine')">الروتين</button>
+      <button type="button" class="nav-item" id="btn-history" onclick="navTo('history')">التقارير</button>
+      <button type="button" class="nav-item" id="btn-cars" onclick="navTo('cars')">السيارات</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Popup لتفاصيل الوردية -->
+<div id="shiftModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px; margin-bottom:12px;">
+      <h3 style="font-size:15px; font-weight:900; color:#0f172a;">📋 تفاصيل الوردية</h3>
+      <button onclick="closeModal()" style="background:none; border:none; font-size:18px; font-weight:bold; cursor:pointer; color:#94a3b8;">✕</button>
+    </div>
+    <div id="modalBody" style="font-size:13px; color:#334155;"></div>
+    <button class="btn" style="margin-top:16px; background:#475569;" onclick="closeModal()">إغلاق</button>
+  </div>
+</div>
+
+<script>
+  const appMessages = {
+    welcome: ["نورت يا مدير الأسطول 👑", "أهلاً بالكابتن، العربيات مستنياك 🚘", "صباح الفل، نبدأ نشوف مين صرف ومين كسب ☕"],
+    goodRevenue: ["ما شاء الله، الوردية داخلة برجليها 🚀", "ربنا يبارك ويزيد، كده العربية بتشتغل مش بتتمشى 😎", "الله ينور، النهارده العربية أكلت عيش 🍞"],
+    mediumRevenue: ["الحمد لله، لقمة عيش محترمة 👍", "مش وحش، العربية جابت تمن البنزين وزيادة شوية ⛽"],
+    lowRevenue: ["ربنا يعوض، شكل الوردية كانت بتتفرج على الشوارع 🛣️", "العربية اشتغلت النهارده بنظام العمل التطوعي 😅"],
+    profitHigh: ["ما شاء الله، فيه مكسب وده خبر يفرّح القلب ❤️", "ربنا يبارك، العربية بتكسب وهي ساكتة 🤫"],
+    profitLoss: ["ربنا يعوض، النهارده العربية أكلت الوردية 💔", "واضح إن العربية اشتغلت عشان تدفع مصاريفها بس 🤦‍♂️"],
+    odometerWrong: ["هو العداد رجع بالزمن ولا إيه؟ ⏳", "القراءة الجديدة أقل من القديمة، العربية بترجع للخلف؟ 🚗"],
+    maintenanceSave: ["اتعملت الصيانة، ربنا يدّيها عمر 🛠️", "العربية خرجت من عند الدكتور بالسلامة 🩺"]
+  };
+
+  function getRandomMsg(type) {
+    const list = appMessages[type] || [];
+    return list.length ? list[Math.floor(Math.random() * list.length)] : "";
+  }
+
+  function showToast(title, type = 'info', quote = '') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let html = `<span class="toast-title">${title}</span>`;
+    if (quote) html += `<div class="toast-quote">"${quote}"</div>`;
+    toast.innerHTML = html;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 4000);
+  }
+
+  let session = { userId: null, username: null };
+  let appState = { cars: [], activeCarId: null, rules: [], shifts: [] };
+  let currentTab = 'home';
+
+  window.onload = function() {
+    let saved = localStorage.getItem('carCare_session');
+    if (saved) {
+      try {
+        session = JSON.parse(saved);
+        if (session.userId && session.username) startApp(true);
+      } catch(e) { localStorage.removeItem('carCare_session'); }
+    }
+  };
+
+  function toggleAuthView(view) {
+    if (view === 'register') {
+      document.getElementById('loginCard').classList.add('hidden');
+      document.getElementById('registerCard').classList.remove('hidden');
+    } else {
+      document.getElementById('registerCard').classList.add('hidden');
+      document.getElementById('loginCard').classList.remove('hidden');
+    }
+  }
+
+  function doLogin() {
+    let u = document.getElementById('loginUser').value.trim();
+    let p = document.getElementById('loginPass').value.trim();
+    if (!u || !p) return showToast('يرجى إدخال البيانات كاملة', 'error');
+
+    let btn = document.getElementById('btnLogin');
+    btn.innerText = 'جاري التحقق...';
+    btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.innerText = 'دخول التطبيق';
+        btn.disabled = false;
+        if (res.success) {
+          session = res.data;
+          localStorage.setItem('carCare_session', JSON.stringify(session));
+          startApp();
+        } else showToast(res.message, 'error');
+      })
+      .withFailureHandler(function() {
+        btn.innerText = 'دخول التطبيق';
+        btn.disabled = false;
+        showToast('خطأ في الاتصال بالسيرفر', 'error');
+      })
+      .checkLogin(u, p);
+  }
+
+  function doRegister() {
+    let u = document.getElementById('regUser').value.trim();
+    let p = document.getElementById('regPass').value.trim();
+    if (!u || !p) return showToast('يرجى ملء كافة البيانات', 'error');
+
+    let btn = document.getElementById('btnRegister');
+    btn.innerText = 'جاري الحفظ...';
+    btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.innerText = 'إنشاء الحساب وتأمين البيانات';
+        btn.disabled = false;
+        if (res.success) {
+          session = res.data;
+          localStorage.setItem('carCare_session', JSON.stringify(session));
+          startApp();
+        } else showToast(res.message, 'error');
+      })
+      .withFailureHandler(function() {
+        btn.innerText = 'إنشاء الحساب وتأمين البيانات';
+        btn.disabled = false;
+        showToast('خطأ أثناء التسجيل', 'error');
+      })
+      .registerUser(u, p);
+  }
+
+  function doLogout() {
+    localStorage.removeItem('carCare_session');
+    location.reload();
+  }
+
+  function startApp(isAuto = false) {
+    document.getElementById('authSection').classList.add('hidden');
+    document.getElementById('appSection').classList.remove('hidden');
+    document.getElementById('userLabel').textContent = session.username;
+    
+    if (!isAuto) {
+      showToast('تم تسجيل الدخول بنجاح ✅', 'success', getRandomMsg('welcome'));
+    }
+    loadUserCars();
+  }
+
+  function loadUserCars() {
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.success) {
+          appState.cars = res.data;
+          if (appState.cars.length > 0 && !appState.activeCarId) {
+            appState.activeCarId = appState.cars[0].id;
+          }
+          renderCarSelect();
+          loadCarRulesAndShifts();
+        } else showToast(res.message, 'error');
+      })
+      .getUserCars(session.userId);
+  }
+
+  function loadCarRulesAndShifts() {
+    let car = getActiveCar();
+    if (!car) { renderTab(); return; }
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (res.success) appState.rules = res.data;
+      renderTab();
+    }).getMaintenanceRules(car.id);
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (res.success) appState.shifts = res.data;
+      renderTab();
+    }).getShiftsHistory(session.userId, car.id);
+  }
+
+  function renderCarSelect() {
+    let sel = document.getElementById('carSelect');
+    sel.innerHTML = '';
+    if (appState.cars.length === 0) {
+      sel.innerHTML = '<option value="">لا توجد سيارات مسجلة</option>';
+      return;
+    }
+    appState.cars.forEach(c => {
+      sel.innerHTML += `<option value="${c.id}" ${String(c.id) === String(appState.activeCarId) ? 'selected' : ''}>🚘 ${c.name}</option>`;
+    });
+  }
+
+  function switchCar(id) {
+    appState.activeCarId = id;
+    loadCarRulesAndShifts();
+  }
+
+  function navTo(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    let btn = document.getElementById(`btn-${tab}`);
+    if (btn) btn.classList.add('active');
+    renderTab();
+  }
+
+  function getActiveCar() {
+    return appState.cars.find(c => String(c.id) === String(appState.activeCarId));
+  }
+
+  function renderTab() {
+    let car = getActiveCar();
+    let container = document.getElementById('tabContent');
+
+    if (!car && currentTab !== 'cars') {
+      container.innerHTML = `<div class="card" style="text-align:center; padding:30px;">
+        <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:12px;">مفيش عربيات لسه، نبدأ نضيف أول واحدة؟ 🚗</p>
+        <button class="btn" onclick="navTo('cars')">+ إضافة سيارة الآن</button>
+      </div>`;
+      return;
+    }
+
+if (currentTab === 'home') {
+      let urgentRules = [];
+      
+      let rulesHtml = appState.rules.map(r => {
+        let rem = (r.lastDoneKm + r.intervalKm) - car.odometer;
+        
+        let statusColor = '#10b981'; // أخضر افتراضي
+        let statusBg = 'transparent';
+        let statusText = `باقي ${rem.toLocaleString('ar-EG')} كم`;
+        let isUrgent = false;
+
+        if (rem <= 0) {
+          statusColor = '#ef4444';
+          statusText = `متأخرة بـ ${Math.abs(rem).toLocaleString('ar-EG')} كم! 🚨`;
+          isUrgent = true;
+        } else if (rem <= 500) { // أقرب من 500 كم (أحمر تنبيهي)
+          statusColor = '#dc2626';
+          statusText = `باقي ${rem.toLocaleString('ar-EG')} كم فقط! ⚠️`;
+          isUrgent = true;
+        } else if (rem <= 1000) { // بين 501 و 1000 كم (برتقالي)
+          statusColor = '#d97706';
+          statusText = `باقي ${rem.toLocaleString('ar-EG')} كم ⏳`;
+        }
+
+        if (isUrgent) {
+          urgentRules.push(`${r.name} (${statusText})`);
+        }
+
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; font-size:12px; border-bottom:1px dashed #f1f5f9;">
+            <div>
+              <b style="font-size:13px;">${r.name}</b>
+              <small style="color:#94a3b8; display:block;">كل ${r.intervalKm.toLocaleString('ar-EG')} كم</small>
+            </div>
+            <div style="font-weight:900; color:${statusColor}; background:${rem <= 500 ? '#fef2f2' : 'transparent'}; padding:4px 8px; border-radius:8px;">
+              ${statusText}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:11px; color:#64748b; font-weight:bold;">عداد السيارة الحالي</span>
+            <div style="font-size:24px; font-weight:900; color:#0f172a;">${(car.odometer||0).toLocaleString('ar-EG')} <small style="font-size:12px; color:#2563eb;">كم</small></div>
+            <small style="font-size:10px; color:#94a3b8; font-weight:bold;">آخر تحديث: ${car.lastUpdate}</small>
+          </div>
+          <button class="btn btn-subtle" onclick="updateKmPrompt()">تحديث العداد</button>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:13px; font-weight:bold; margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:6px;">روتين الصيانة الحالي</h3>
+          ${appState.rules.length === 0 ? '<div style="font-size:11px; color:#94a3b8;">لا توجد بنود صيانة مسجلة</div>' : ''}
+          ${rulesHtml}
+        </div>
+      `;
+
+      // إظهار تنبيه Toast تلقائي إذا كان هناك بند صيانة مستحق أو قريب جداً
+      if (urgentRules.length > 0 && !window.hasAlertedMaint) {
+        window.hasAlertedMaint = true;
+        showToast(`تنبيه صيانة عاجل 🛠️`, 'warning', `خد بالك: ${urgentRules[0]} - "الصيانة قربت، ماتستناش العربية تعمل إضراب!"`);
+      }
+    }
+    else if (currentTab === 'daily') {
+      // جلب أحدث 10 ورديات فقط للتقييد المطلوب
+      let recent10Shifts = appState.shifts.slice().reverse().slice(0, 10);
+
+      container.innerHTML = `
+        <div class="card">
+          <h3 style="font-size:14px; font-weight:bold; margin-bottom:12px; border-bottom:1px solid #f1f5f9; padding-bottom:6px;">📝 تسجيل وردية اليوم</h3>
+          <div class="input-group">
+            <label>إجمالي إيراد اليوم (ج.م):</label>
+            <input type="number" min="0" id="shiftRev" placeholder="350" class="input-field">
+          </div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>مشوار اليوم (كم):</label>
+              <input type="number" min="0" id="shiftKm" placeholder="100" class="input-field">
+            </div>
+            <div class="input-group">
+              <label>بنزين اليوم (ج.م):</label>
+              <input type="number" min="0" id="shiftFuel" placeholder="80" class="input-field">
+            </div>
+          </div>
+          <div class="input-group">
+            <label>نثريات / ركنة / غسيل (ج.م):</label>
+            <input type="number" min="0" id="shiftMisc" placeholder="10" class="input-field">
+          </div>
+          <button class="btn btn-green" id="btnSaveShift" onclick="saveShiftAction()">حساب وصفي الوردية</button>
+        </div>
+
+        <div id="resBox" class="card hidden">
+          <div class="grid-2">
+            <div class="stat-box">
+              <span style="font-size:11px; font-weight:bold; color:#92400e; display:block;">🏦 شيل في الحصالة</span>
+              <div id="outSaving" style="font-size:18px; font-weight:900; color:#b45309;">0 ج.م</div>
+              <span style="font-size:9px; color:#a16207;">(قسط + صيانة)</span>
+            </div>
+            <div class="stat-box stat-box-green">
+              <span style="font-size:11px; font-weight:bold; color:#065f46; display:block;">💵 الصافي الحقيقي</span>
+              <div id="outNet" style="font-size:18px; font-weight:900; color:#047857;">0 ج.م</div>
+              <span style="font-size:9px; color:#064e3b;">(صافي ربحك الحر)</span>
+            </div>
+          </div>
+
+          <div style="font-size:11px; font-weight:bold; margin-top:12px; padding-top:10px; border-top:1px solid #f1f5f9; color:#475569;" class="grid-2">
+            <div>📌 قسط اليوم: <b id="outInst" style="color:#0f172a;">0</b> ج.م</div>
+            <div>🛠️ صيانة المشوار: <b id="outMaint" style="color:#0f172a;">0</b> ج.م</div>
+            <div>⛽ بنزين اليوم: <b id="outFuel" style="color:#0f172a;">0</b> ج.م</div>
+            <div>☕ نثريات وركنة: <b id="outMisc" style="color:#0f172a;">0</b> ج.م</div>
+          </div>
+        </div>
+
+        <!-- عرض آخر 10 ورديات فقط تحت النموذج -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="font-size:13px; font-weight:bold;">📊 أحدث الورديات (آخر 10 ورديات)</h3>
+            <span style="font-size:10px; color:#94a3b8; font-weight:bold;">اضغط للتفاصيل</span>
+          </div>
+          ${recent10Shifts.length === 0 ? '<div style="font-size:11px; color:#94a3b8; text-align:center; padding:10px;">لا توجد ورديات حتى الآن</div>' : ''}
+          ${recent10Shifts.map(s => renderShiftCard(s)).join('')}
+        </div>
+      `;
+    }
+    else if (currentTab === 'routine') {
+      container.innerHTML = `
+        <div class="card">
+          <h3 style="font-size:14px; font-weight:bold; margin-bottom:12px;">🛠️ إضافة بند صيانة جديد</h3>
+          <div class="input-group">
+            <label>اسم البند (مثال: تغيير زيت الموتور)</label>
+            <input type="text" id="ruleName" placeholder="تغيير الزيت" class="input-field">
+          </div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>كل كم كم؟</label>
+              <input type="number" min="1" id="ruleInterval" placeholder="5000" class="input-field">
+            </div>
+            <div class="input-group">
+              <label>التكلفة التقديرية</label>
+              <input type="number" min="0" id="ruleCost" placeholder="1200" class="input-field">
+            </div>
+          </div>
+          <button class="btn btn-purple" id="btnAddRule" onclick="addRuleAction()">حفظ بند الصيانة</button>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:13px; font-weight:bold; margin-bottom:10px;">بنود الصيانة المسجلة:</h3>
+          ${appState.rules.length === 0 ? '<div style="font-size:11px; color:#94a3b8;">لا توجد بنود صيانة مسجلة</div>' : ''}
+          ${appState.rules.map(r => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:12px;">
+              <div><b>${r.name}</b><br><small style="color:#94a3b8;">كل ${r.intervalKm} كم (~${r.estCost} ج.م)</small></div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    else if (currentTab === 'history') {
+      container.innerHTML = `
+        <div class="card no-print">
+          <h3 style="font-size:14px; font-weight:bold; margin-bottom:12px;">📅 البحث والفلترة بالتاريخ</h3>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>من تاريخ:</label>
+              <input type="date" id="filterFrom" class="input-field">
+            </div>
+            <div class="input-group">
+              <label>إلى تاريخ:</label>
+              <input type="date" id="filterTo" class="input-field">
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:5px;">
+            <button class="btn" onclick="applyDateFilter()">تطبيق الفلتر</button>
+            <button class="btn btn-purple" onclick="printReport()">تصدير PDF / طباعة</button>
+          </div>
+        </div>
+
+        <!-- كارت ملخص الحسابات للفترة المحددة -->
+        <div id="summaryCard" class="card">
+          <h3 style="font-size:13px; font-weight:bold; margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:6px;">📈 ملخص حسابات الفترة المحددة</h3>
+          <div id="summaryContent" class="grid-2" style="font-size:12px; font-weight:bold;">
+            <div style="background:#f8fafc; padding:8px; border-radius:8px;">إجمالي الإيراد: <span id="sumRev">0</span> ج.م</div>
+            <div style="background:#f8fafc; padding:8px; border-radius:8px;">إجمالي البنزين: <span id="sumFuel">0</span> ج.م</div>
+            <div style="background:#fef3c7; padding:8px; border-radius:8px; color:#b45309;">إجمالي الحصالة: <span id="sumSaving">0</span> ج.م</div>
+            <div style="background:#d1fae5; padding:8px; border-radius:8px; color:#047857;">الصافي الحقيقي: <span id="sumNet">0</span> ج.م</div>
+          </div>
+        </div>
+
+        <!-- قائمة الورديات -->
+        <div class="card">
+          <h3 style="font-size:14px; font-weight:bold; margin-bottom:10px;">📋 سجل الورديات التفصيلي</h3>
+          <div id="historyList">
+            ${renderHistoryList(appState.shifts.slice().reverse())}
+          </div>
+        </div>
+      `;
+      // حساب إجمالي الفترة لجميع الورديات مبدئياً
+      calculateSummary(appState.shifts);
+    }
+    else if (currentTab === 'cars') {
+      container.innerHTML = `
+        <div class="card">
+          <h3 style="font-size:14px; font-weight:bold; margin-bottom:12px;">+ إضافة سيارة جديدة</h3>
+          <div class="input-group">
+            <label>اسم السيارة / الموديل</label>
+            <input type="text" id="newCarName" placeholder="ماروتي 2009" class="input-field">
+          </div>
+          <div class="input-group">
+            <label>العداد الحالي (كم)</label>
+            <input type="number" min="0" id="newCarKm" placeholder="90000" class="input-field">
+          </div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>القسط الشهري</label>
+              <input type="number" min="0" id="newCarInst" value="1500" class="input-field">
+            </div>
+            <div class="input-group">
+              <label>أيام العمل/شهر</label>
+              <input type="number" min="1" id="newCarDays" value="20" class="input-field">
+            </div>
+          </div>
+          <button class="btn" id="btnAddCar" onclick="addCarAction()">حفظ السيارة</button>
+        </div>
+      `;
+    }
+  }
+
+  // رسم كارت الوردية التفاعلي
+  function renderShiftCard(s) {
+    return `
+      <div onclick="openShiftModal('${s.id}')" style="background:#f8fafc; padding:12px; border-radius:14px; margin-bottom:10px; border:1px solid #e2e8f0; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#e2e8f0'">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:12px; font-weight:800; color:#0f172a;">📅 ${s.date}</span>
+          <span style="font-size:13px; font-weight:900; color:#059669;">صافي: ${s.net} ج.م</span>
+        </div>
+        <div class="grid-2" style="font-size:11px; color:#475569; font-weight:bold;">
+          <div>إيراد: <b>${s.revenue}</b> ج.م</div>
+          <div>🏦 حصالة: <b>${s.saving}</b> ج.م</div>
+          <div>⛽ بنزين: <b>${s.fuel}</b> ج.م</div>
+          <div>🛣️ مشوار: <b>${s.km}</b> كم</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderHistoryList(list) {
+    if (list.length === 0) {
+      return '<div style="font-size:11px; color:#94a3b8; text-align:center; padding:15px;">لا توجد ورديات مسجلة في هذه الفترة</div>';
+    }
+    return list.map(s => renderShiftCard(s)).join('');
+  }
+
+  // حساب الملخص المالي للفترة المحددة
+  function calculateSummary(list) {
+    let rev = 0, fuel = 0, saving = 0, net = 0;
+    list.forEach(s => {
+      rev += s.revenue;
+      fuel += s.fuel;
+      saving += s.saving;
+      net += s.net;
+    });
+    
+    let elRev = document.getElementById('sumRev');
+    if (elRev) {
+      elRev.innerText = rev.toLocaleString('ar-EG');
+      document.getElementById('sumFuel').innerText = fuel.toLocaleString('ar-EG');
+      document.getElementById('sumSaving').innerText = saving.toLocaleString('ar-EG');
+      document.getElementById('sumNet').innerText = net.toLocaleString('ar-EG');
+    }
+  }
+
+  // تطبيق الفلتر بالتاريخ
+  function applyDateFilter() {
+    let from = document.getElementById('filterFrom').value;
+    let to = document.getElementById('filterTo').value;
+
+    if (!from || !to) {
+      showToast('يرجى تحديد تاريخ البداية والنهاية', 'warning');
+      return;
+    }
+
+    let filtered = appState.shifts.filter(s => {
+      return s.isoDate >= from && s.isoDate <= to;
+    });
+
+    document.getElementById('historyList').innerHTML = renderHistoryList(filtered.slice().reverse());
+    calculateSummary(filtered);
+    showToast(`تم العثور على ${filtered.length} وردية`, 'success');
+  }
+
+  // تصدير PDF / طباعة
+  function printReport() {
+    window.print();
+  }
+
+  // فتح نافذة تفاصيل الوردية
+  function openShiftModal(shiftId) {
+    let shift = appState.shifts.find(s => String(s.id) === String(shiftId));
+    if (!shift) return;
+
+    let html = `
+      <div style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:12px; font-weight:bold;">
+        📅 <b>التاريخ:</b> ${shift.date}
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; font-weight:bold;">
+        <div style="display:flex; justify-content:space-between;"><span>إجمالي إيراد اليوم:</span> <b style="color:#2563eb;">${shift.revenue} ج.م</b></div>
+        <div style="display:flex; justify-content:space-between;"><span>مشوار اليوم (المسافة):</span> <b>${shift.km} كم</b></div>
+        <div style="display:flex; justify-content:space-between;"><span>بنزين اليوم:</span> <b style="color:#ef4444;">${shift.fuel} ج.م</b></div>
+        <div style="display:flex; justify-content:space-between;"><span>نثريات / ركنة / غسيل:</span> <b>${shift.misc} ج.م</b></div>
+        <hr style="border:0; border-top:1px dashed #cbd5e1; margin:4px 0;">
+        <div style="display:flex; justify-content:space-between; color:#b45309;"><span>📌 قسط اليوم:</span> <b>${shift.installment} ج.م</b></div>
+        <div style="display:flex; justify-content:space-between; color:#b45309;"><span>🛠️ صيانة المشوار:</span> <b>${shift.maint} ج.م</b></div>
+        <div style="display:flex; justify-content:space-between; color:#b45309; background:#fef3c7; padding:6px; border-radius:6px;"><span>🏦 إجمالي الحصالة:</span> <b>${shift.saving} ج.م</b></div>
+        <hr style="border:0; border-top:1px solid #cbd5e1; margin:4px 0;">
+        <div style="display:flex; justify-content:space-between; color:#047857; background:#d1fae5; padding:8px; border-radius:8px; font-size:14px;"><span>💵 الصافي الحقيقي (في جيبك):</span> <b>${shift.net} ج.م</b></div>
+      </div>
+    `;
+
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('shiftModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('shiftModal').classList.add('hidden');
+  }
+
+  function updateKmPrompt() {
+    let car = getActiveCar();
+    let val = prompt('أدخل قيمة العداد الجديدة (كم):', car.odometer);
+    if (val !== null && !isNaN(val)) {
+      let num = Number(val);
+      if (num < car.odometer) {
+        showToast('خطأ في إدخال العداد! 🛑', 'warning', getRandomMsg('odometerWrong'));
+        return;
+      }
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success) {
+            showToast('تم تحديث العداد بنجاح ✅', 'success', 'كل كيلومتر جديد له حكاية ورزق جديد!');
+            loadUserCars();
+          } else showToast(res.message, 'error');
+        })
+        .updateCarKm(session.userId, car.id, num);
+    }
+  }
+
+  function addCarAction() {
+    let name = document.getElementById('newCarName').value;
+    let km = document.getElementById('newCarKm').value;
+    let inst = document.getElementById('newCarInst').value;
+    let days = document.getElementById('newCarDays').value;
+
+    let btn = document.getElementById('btnAddCar');
+    btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        if (res.success) {
+          showToast('تم حفظ السيارة بنجاح 🚘', 'success', 'مبروك العربية الجديدة، ربنا يديك خيرها ويكفيك شرها!');
+          loadUserCars();
+        } else showToast(res.message, 'error');
+      })
+      .addCar(session.userId, name, km, inst, days);
+  }
+
+  function addRuleAction() {
+    let car = getActiveCar();
+    let name = document.getElementById('ruleName').value;
+    let interval = document.getElementById('ruleInterval').value;
+    let cost = document.getElementById('ruleCost').value;
+
+    let btn = document.getElementById('btnAddRule');
+    btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        if (res.success) {
+          showToast('تم تسجيل بند الصيانة 🛠️', 'success', getRandomMsg('maintenanceSave'));
+          loadCarRulesAndShifts();
+        } else showToast(res.message, 'error');
+      })
+      .addMaintenanceRule(car.id, name, interval, cost, car.odometer);
+  }
+
+  function saveShiftAction() {
+    let car = getActiveCar();
+    let rev = Number(document.getElementById('shiftRev').value) || 0;
+    let km = Number(document.getElementById('shiftKm').value) || 0;
+    let fuel = Number(document.getElementById('shiftFuel').value) || 0;
+    let misc = Number(document.getElementById('shiftMisc').value) || 0;
+
+    let btn = document.getElementById('btnSaveShift');
+    btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        if (res.success) {
+          document.getElementById('resBox').classList.remove('hidden');
+          document.getElementById('outSaving').innerText = res.data.savingTarget + ' ج.م';
+          document.getElementById('outNet').innerText = res.data.netProfit + ' ج.م';
+          
+          document.getElementById('outInst').innerText = res.data.dailyInstallment;
+          document.getElementById('outMaint').innerText = res.data.dailyMaintCost;
+          document.getElementById('outFuel').innerText = fuel;
+          document.getElementById('outMisc').innerText = misc;
+
+          let quote = "";
+          let toastType = "success";
+          if (res.data.netProfit > 200) {
+            quote = getRandomMsg('goodRevenue') + " | " + getRandomMsg('profitHigh');
+          } else if (res.data.netProfit > 0) {
+            quote = getRandomMsg('mediumRevenue');
+          } else {
+            quote = getRandomMsg('lowRevenue') + " | " + getRandomMsg('profitLoss');
+            toastType = "warning";
+          }
+
+          showToast(`تم حفظ الوردية | صافي الربح: ${res.data.netProfit} ج.م`, toastType, quote);
+          loadUserCars();
+        } else showToast(res.message, 'error');
+      })
+      .saveShift(session.userId, car.id, km, rev, fuel, misc);
+  }
+</script>
+</body>
+</html>
