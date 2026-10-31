@@ -10,7 +10,7 @@
     .app-container { max-width: 460px; margin: 0 auto; min-height: 100vh; padding-bottom: 85px; position: relative; }
     .card { background: #ffffff; border-radius: 18px; padding: 18px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
     
-    /* 🤲 تنسيق كارت الرسالة الطيبة والصدقة الجارية */
+    /* 🤲 كارت الرسالة الطيبة والصدقة الجارية */
     .sadaqa-card {
       background: linear-gradient(135deg, #fffdf5, #fff7d6);
       border: 1px solid #f3d98b;
@@ -177,8 +177,8 @@
 </div>
 
 <script>
-  // 🔗 رابط Apps Script الخاص بك
-  const API_URL = "https://script.google.com/macros/s/AKfycbyl041pAIsE3k6N-rBrtx_l6e0IUn_lAtbAasj20r4k-qX5oFpS_1A08X6U_KjV4vDk/exec";
+  // 🔗 استبدل هذا بالرابط الذي نسخته من Apps Script
+  const API_URL = "https://script.google.com/macros/s/AKfycbykaJBHVaxjTukjY_zYc6PXBZkOIHE5FCmADTmSoeC_nc7AK8hiKIpLRkkcIYmg7-aV4w/exec";
 
   // قائمة الرسائل والدعوات الطيبة
   const sadaqaMessages = [
@@ -227,13 +227,23 @@
     return shiftMessages[index];
   }
 
+  // 🛠️ دالة الاتصال المحسنة لتجنب حظر الـ CORS
   async function apiCall(data, params = "") {
-    if (data) {
-      let res = await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
-      return await res.json();
-    } else {
-      let res = await fetch(API_URL + params);
-      return await res.json();
+    try {
+      if (data) {
+        let res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(data)
+        });
+        return await res.json();
+      } else {
+        let res = await fetch(API_URL + params);
+        return await res.json();
+      }
+    } catch(err) {
+      console.error("API Call Error:", err);
+      throw err;
     }
   }
 
