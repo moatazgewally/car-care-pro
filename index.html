@@ -9,6 +9,53 @@
     body { background-color: #f1f5f9; color: #0f172a; direction: rtl; text-align: right; }
     .app-container { max-width: 460px; margin: 0 auto; min-height: 100vh; padding-bottom: 85px; position: relative; }
     .card { background: #ffffff; border-radius: 18px; padding: 18px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
+    
+    /* 🤲 تنسيق كارت الرسالة الطيبة والصدقة الجارية */
+    .sadaqa-card {
+      background: linear-gradient(135deg, #fffdf5, #fff7d6);
+      border: 1px solid #f3d98b;
+      border-radius: 18px;
+      padding: 18px 16px;
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(180, 130, 20, 0.08);
+    }
+    .sadaqa-icon { font-size: 30px; margin-bottom: 8px; }
+    .sadaqa-title { color: #8a6412; font-size: 15px; font-weight: 900; margin-bottom: 10px; }
+    .sadaqa-message {
+      color: #5f4b1c;
+      font-size: 13px;
+      line-height: 1.9;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+    .sadaqa-btn {
+      margin-top: 12px;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      color: #ffffff;
+      background: #b8860b;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sadaqa-btn:active { transform: scale(0.97); }
+
+    /* Footer أسفل التطبيق */
+    .app-footer {
+      text-align: center;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.8;
+      padding: 18px 12px 80px;
+      font-weight: 600;
+    }
+
     .btn { display: block; width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; }
     .btn:disabled { background: #94a3b8 !important; cursor: not-allowed; }
     .btn-green { background: #10b981; }
@@ -28,6 +75,7 @@
     .hidden { display: none !important; }
     .stat-box { background: #fef3c7; border: 1px solid #fde68a; padding: 12px; border-radius: 14px; text-align: center; }
     .stat-box-green { background: #d1fae5; border: 1px solid #a7f3d0; }
+    
     #toastContainer { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 100; width: 92%; max-width: 420px; }
     .toast { padding: 12px 16px; border-radius: 14px; background: #1e293b; color: #fff; font-size: 13px; margin-bottom: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); border-right: 5px solid #2563eb; }
     .toast.success { border-right-color: #10b981; }
@@ -35,9 +83,10 @@
     .toast.warning { border-right-color: #f59e0b; }
     .toast-title { font-weight: 800; font-size: 13px; margin-bottom: 2px; display: block; }
     .toast-quote { font-size: 12px; color: #cbd5e1; font-style: italic; font-weight: 600; }
+    
     .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(15,23,42,0.6); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .modal-card { background: #fff; border-radius: 20px; width: 100%; max-width: 400px; padding: 20px; }
-    @media print { .nav-bar, .header, .btn, #toastContainer, .no-print { display: none !important; } .app-container { max-width: 100%; } }
+    @media print { .nav-bar, .header, .btn, #toastContainer, .no-print, .sadaqa-card, .app-footer { display: none !important; } .app-container { max-width: 100%; } }
   </style>
 </head>
 <body>
@@ -46,6 +95,7 @@
 
 <div class="app-container">
 
+  <!-- صفحة الدخول والتسجيل -->
   <div id="authSection" style="padding: 24px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
     <div style="text-align: center; margin-bottom: 24px;">
       <div style="width: 64px; height: 64px; background: #2563eb; color: #fff; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 32px;">🚗</div>
@@ -86,6 +136,7 @@
     </div>
   </div>
 
+  <!-- التطبيق الرئيسي -->
   <div id="appSection" class="hidden">
     <div class="header">
       <div class="header-top">
@@ -126,8 +177,55 @@
 </div>
 
 <script>
-  // 🔗 ضع رابط الـ Apps Script الخـاص بك هنا
-  const API_URL = "https://script.google.com/macros/s/AKfycbykaJBHVaxjTukjY_zYc6PXBZkOIHE5FCmADTmSoeC_nc7AK8hiKIpLRkkcIYmg7-aV4w/exec";
+  // 🔗 رابط Apps Script الخاص بك
+  const API_URL = "https://script.google.com/macros/s/AKfycbyl041pAIsE3k6N-rBrtx_l6e0IUn_lAtbAasj20r4k-qX5oFpS_1A08X6U_KjV4vDk/exec";
+
+  // قائمة الرسائل والدعوات الطيبة
+  const sadaqaMessages = [
+    "لو البرنامج نفعك، ادعُ لصاحبه: اللهم اجعل هذا العمل صدقة جارية في ميزان حسناته.",
+    "اللهم بارك لمن ساهم في هذا البرنامج، وانفع به كل من استخدمه.",
+    "دعوة لصاحب البرنامج من قلبك، ربنا يرزقه ويبارك له في وقته وعمله.",
+    "اللهم اجعل كل شخص استفاد من هذا البرنامج سببًا في زيادة أجر من عمله.",
+    "ربنا يجعل العمل ده نافعًا، ويجعل أثره ممتدًا حتى بعد صاحبه.",
+    "اللهم اغفر لمن ساهم في هذا العمل، وبارك له في رزقه وأهله وصحته.",
+    "دعوة لأخوك من قلبك، يمكن تكون سبب فرج لا يعلمه إلا الله.",
+    "اللهم ارزقك رزقًا حلالًا واسعًا، وبارك لك في سيارتك وشغلك.",
+    "ربنا يبارك لك في تعبك، ويجعل كل جنيه حلال سبب راحة وخير.",
+    "اللهم احفظك من الحوادث والأعطال، وردك لأهلك سالمًا غانمًا.",
+    "ربنا يوسع رزقك، ويقضي دينك، ويبارك لك في صحتك ووقتك.",
+    "اللهم اجعل يومك رزقًا وبركة وسترًا وراحة بال.",
+    "اللهم اشفِ كل مريض، واقضِ دين كل مديون، وفرّج هم كل مهموم.",
+    "اللهم ارحم موتانا وموتى المسلمين، واغفر لهم ونوّر قبورهم.",
+    "اللهم صل وسلم وبارك على سيدنا محمد.",
+    "سبحان الله وبحمده، سبحان الله العظيم.",
+    "لا تنسَ والديك من دعوة طيبة.",
+    "ربنا يفرّح قلبك، ويعوّضك عن كل تعب شوفته.",
+    "اللهم اجعلنا سببًا في الخير، ولا تجعلنا سببًا في أذى أحد.",
+    "ربنا يرزقك من حيث لا تحتسب، ويبعد عنك شر الطريق والميكانيكي."
+  ];
+
+  function showRandomSadaqaMessage() {
+    var messageElement = document.getElementById("sadaqaMessage");
+    if (!messageElement) return;
+    var randomIndex = Math.floor(Math.random() * sadaqaMessages.length);
+    messageElement.textContent = sadaqaMessages[randomIndex];
+  }
+
+  const shiftMessages = [
+    "ما شاء الله، الوردية داخلة برجليها. ربنا يبارك.",
+    "ربنا يرزقك من الحلال، ويحمي العربية من الميكانيكي.",
+    "الله ينور، العربية أكلت عيش النهارده.",
+    "الحمد لله، لقمة عيش محترمة وربنا يزيدها.",
+    "ربنا يعوض، شكل الوردية كانت بتتفرج على الشوارع.",
+    "العربية اشتغلت النهارده بنظام العمل التطوعي.",
+    "المكسب موجود، وافتكر صاحبه بدعوة طيبة.",
+    "ربنا يجعل تعبك كله في ميزان حسناتك."
+  ];
+
+  function getRandomShiftMessage() {
+    var index = Math.floor(Math.random() * shiftMessages.length);
+    return shiftMessages[index];
+  }
 
   async function apiCall(data, params = "") {
     if (data) {
@@ -137,20 +235,6 @@
       let res = await fetch(API_URL + params);
       return await res.json();
     }
-  }
-
-  const appMessages = {
-    welcome: ["نورت يا مدير الأسطول 👑", "أهلاً بالكابتن، العربيات مستنياك 🚘", "صباح الفل، نبدأ نشوف مين صرف ومين كسب ☕"],
-    goodRevenue: ["ما شاء الله، الوردية داخلة برجليها 🚀", "ربنا يبارك ويزيد، كده العربية بتشتغل مش بتتمشى 😎"],
-    mediumRevenue: ["الحمد لله، لقمة عيش محترمة 👍", "مش وحش، العربية جابت تمن البنزين وزيادة شوية ⛽"],
-    lowRevenue: ["ربنا يعوض، شكل الوردية كانت بتتفرج على الشوارع 🛣️", "العربية اشتغلت النهارده بنظام العمل التطوعي 😅"],
-    profitHigh: ["ما شاء الله، فيه مكسب وده خبر يفرّح القلب ❤️"],
-    profitLoss: ["ربنا يعوض، النهارده العربية أكلت الوردية 💔"]
-  };
-
-  function getRandomMsg(type) {
-    const list = appMessages[type] || [];
-    return list.length ? list[Math.floor(Math.random() * list.length)] : "";
   }
 
   function showToast(title, type = 'info', quote = '') {
@@ -247,7 +331,14 @@
     document.getElementById('authSection').classList.add('hidden');
     document.getElementById('appSection').classList.remove('hidden');
     document.getElementById('userLabel').textContent = session.username;
-    if (!isAuto) showToast('تم تسجيل الدخول بنجاح ✅', 'success', getRandomMsg('welcome'));
+    
+    navTo('home');
+
+    setTimeout(function() {
+      showRandomSadaqaMessage();
+    }, 300);
+
+    if (!isAuto) showToast('تم تسجيل الدخول بنجاح ✅', 'success', 'توكلنا على الله، ربنا يجعلها فاتحة خير عليك.');
     loadUserCars();
   }
 
@@ -330,6 +421,16 @@
       }).join('');
 
       container.innerHTML = `
+        <!-- كارت الرسالة الطيبة -->
+        <div class="sadaqa-card">
+          <div class="sadaqa-icon">🤲</div>
+          <div class="sadaqa-title">رسالة طيبة لعلها تنفع</div>
+          <div id="sadaqaMessage" class="sadaqa-message">
+            اللهم اجعل هذا العمل صدقة جارية في ميزان حسنات من ساهم فيه.
+          </div>
+          <button type="button" class="sadaqa-btn" onclick="showRandomSadaqaMessage()">دعوة جديدة 🔄</button>
+        </div>
+
         <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
           <div>
             <span style="font-size:11px; color:#64748b; font-weight:bold;">عداد السيارة الحالي</span>
@@ -338,11 +439,19 @@
           </div>
           <button class="btn btn-subtle" onclick="updateKmPrompt()">تحديث العداد</button>
         </div>
+
         <div class="card">
           <h3 style="font-size:13px; font-weight:bold; margin-bottom:10px;">روتين الصيانة الحالي</h3>
           ${rulesHtml || '<div style="font-size:11px; color:#94a3b8;">لا توجد بنود صيانة</div>'}
         </div>
+
+        <!-- Footer أسفل التطبيق -->
+        <div class="app-footer">
+          <div>🤲 اللهم اجعل هذا العمل صدقة جارية</div>
+          <div>لو انتفعت بالبرنامج، ادعُ لصاحبه ولو بدعوة واحدة</div>
+        </div>
       `;
+      setTimeout(showRandomSadaqaMessage, 50);
     }
     else if (currentTab === 'daily') {
       let recent10Shifts = appState.shifts.slice().reverse().slice(0, 10);
@@ -517,7 +626,9 @@
       document.getElementById('resBox').classList.remove('hidden');
       document.getElementById('outSaving').innerText = res.data.savingTarget + ' ج.م';
       document.getElementById('outNet').innerText = res.data.netProfit + ' ج.م';
-      showToast("تم حفظ الوردية بنجاح ✅", "success");
+      
+      let randomShiftQuote = getRandomShiftMessage();
+      showToast(`تم حفظ الوردية بنجاح ✅`, "success", randomShiftQuote);
       loadUserCars();
     }
   }
